@@ -1,0 +1,35 @@
+services:
+  db:
+    image: mysql
+    restart: always
+    ports:
+      - "3307:3306"
+    expose:
+      - "3306"
+    env_file:
+      - .env
+    volumes:
+      - "./conf.d:/etc/mysql/conf.d:ro"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080"]
+      start_period: 90s
+      interval: 10s
+      timeout: 10s
+      retries: 5
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      args:
+        - SERVER_TYPE=${BACKEND_SERVER_TYPE}
+    restart: on-failure
+    container_name: DemoBackend
+    ports:
+      - 8080:8080
+    volumes:
+      - "./backend/env-config/prod:/app/config:ro"
+    depends_on:
+      - db
+    links: 
+      - db
+        
